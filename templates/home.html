@@ -1,8 +1,0 @@
-{% extends 'base.html' %}
-
-{% block home %}
-    {% for obj in object_list %}
-      <p><a href="{{ obj.url }}" target="_blank">{{ obj.title }}</a></p>
-      <p>{{ obj.description }}</p>
-    {% endfor %}
-{% endblock %}
