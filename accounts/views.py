@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib import messages
 # Create your views here.
 from accounts.forms import UserLoginForm, UserRegistrationForm, UserUpdateForm
-
+User = get_user_model()
 
 def login_view(request):
     form = UserLoginForm(request.POST or None)
@@ -29,13 +30,14 @@ def register_view(request):
         new_user = form.save(commit=False)
         new_user.set_password(form.cleaned_data['password'])
         new_user.save()
+        messages.success(request, 'Пользователь добавлен в систему.')
         return render(request, 'accounts/register_done.html', {'new_user': new_user})
 
     return render(request, 'accounts/register.html',  {'form': form})
 
 
 def update_view(request):
-#    contact_form = ContactForm()
+    #contact_form = ContactForm()
     if request.user.is_authenticated:
         user = request.user
         if request.method == 'POST':
@@ -46,14 +48,23 @@ def update_view(request):
                 user.language = data['language']
                 user.send_email = data['send_email']
                 user.save()
-                #messages.success(request, 'Данные сохраненны.')
+                messages.success(request, 'Данные сохраненны.')
                 return redirect('accounts:update')
 
         form = UserUpdateForm(
             initial={'city': user.city, 'language': user.language,
                      'send_email': user.send_email})
         return render(request, 'accounts/update.html',
-                      {'form': form, 'form': form})
+                      {'form': form})
     else:
         return redirect('accounts:login')
-#    return redirect('accounts:register_done')
+
+
+def delete_view(request):
+    if request.user.is_authenticated:
+        user = request.user
+        if request.method == 'POST':
+            qs = User.objects.get(pk=user.pk)
+            qs.delete()
+            messages.error(request, 'Пользователь удален.')
+    return redirect('home')
